@@ -8,7 +8,7 @@ echo "=========================================="
 echo "    kkkbox sing-box 64M VPS 安装脚本      "
 echo "=========================================="
 
-# 1. 自动创建 128M Swap 防止 64M 小鸡 OOM
+# 1. 自动创建 128M Swap 防止小内存 OOM（若已有 Swap 则自动跳过）
 swap_size=$(free -m | awk '/Swap/ {print $2}')
 if [ "$swap_size" = "0" ]; then
     yellow "检测到无 Swap，正在临时创建 128MB 虚拟内存..."
@@ -50,9 +50,12 @@ if [ ! -f "/root/singbox/sing-box" ]; then
 fi
 green "sing-box 文件就绪！"
 
-# 4. 端口选择与检查
+# 4. 端口与 SNI 自定义交互
 read -p "请输入 reality 端口号 [默认: 8443]：" port
 [ -z "$port" ] && port=8443
+
+read -p "请输入自定义 SNI / 回落域名 [默认: www.microsoft.com]：" DEST_SERVER
+[ -z "$DEST_SERVER" ] && DEST_SERVER="www.microsoft.com"
 
 # 5. 生成密钥与UUID
 REAL_UUID=$(cat /proc/sys/kernel/random/uuid)
@@ -60,7 +63,6 @@ KEYS=$(/root/singbox/sing-box generate reality-keypair)
 PRI_KEY=$(echo "$KEYS" | grep PrivateKey | awk '{print $2}')
 PUB_KEY=$(echo "$KEYS" | grep PublicKey | awk '{print $2}')
 SHORT_ID=$(dd bs=4 count=2 if=/dev/urandom 2>/dev/null | xxd -p -c 8)
-DEST_SERVER="www.microsoft.com"
 
 # 6. 写入完全合法的配置文件
 cat << JSON_EOF > /root/singbox/config.json
