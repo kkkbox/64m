@@ -34,16 +34,16 @@
 ### 方式一：一键脚本运行（适用于已托管至 GitHub / 仓库）
 
 ```sh
-wget -O sbss_install.sh https://raw.githubusercontent.com/kkkbox/64m/main/sbss_install.sh && chmod +x sbss_install.sh && ./sbss_install.sh
+wget -O install.sh https://raw.githubusercontent.com/kkkbox/64m/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 ### 方式二：本地手动创建运行
 
 ```sh
-cat << 'EOF' > sbss_install.sh
+cat << 'EOF' > install.sh
 # 将脚本完整代码粘贴至此处
 EOF
-chmod +x sbss_install.sh && ./sbss_install.sh
+chmod +x install.sh && ./install.sh
 ```
 
 ### 日常呼出管理面板
