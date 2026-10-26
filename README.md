@@ -38,10 +38,10 @@
 
 ### 一键安装
 
-将 `new-install.sh` 发布到 GitHub 仓库 `kkkbox/64m` 的 `main` 分支后，以 root 身份在 VPS 上执行：
+将 `install.sh` 发布到 GitHub 仓库 `kkkbox/64m` 的 `main` 分支后，以 root 身份在 VPS 上执行：
 
 ```sh
-wget -O new-install.sh https://raw.githubusercontent.com/kkkbox/64m/main/new-install.sh && chmod +x new-install.sh && ./new-install.sh
+wget -O install.sh https://raw.githubusercontent.com/kkkbox/64m/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 命令会下载脚本、设置执行权限并启动安装。首次运行会安装依赖、下载 sing-box、创建 OpenRC 服务并显示管理菜单。
@@ -52,11 +52,21 @@ wget -O new-install.sh https://raw.githubusercontent.com/kkkbox/64m/main/new-ins
 sb
 ```
 
+### 一键卸载
+
+将 `uninstall.sh` 发布到同一仓库的 `main` 分支后，以 root 身份在 VPS 上执行：
+
+```sh
+wget -O uninstall.sh https://raw.githubusercontent.com/kkkbox/64m/main/uninstall.sh && chmod +x uninstall.sh && ./uninstall.sh
+```
+
+卸载脚本会先要求输入 `YES` 确认，然后停止并移除本项目创建的 sing-box 服务、管理命令和 `/root/singbox` 配置目录。系统软件包和 `/swapfile` 会保留。
+
 ---
 
 ## 📋 功能菜单预览
 
-运行 `new-install.sh` 或 `sb` 后会显示：
+运行 `install.sh` 或 `sb` 后会显示：
 
 ```text
 ==========================================
