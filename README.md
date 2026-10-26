@@ -36,16 +36,15 @@
 
 ## 🚀 快速开始
 
-### 本地运行
+### 一键安装
 
-将 `new-install.sh` 上传到 VPS 后执行：
+将 `new-install.sh` 发布到 GitHub 仓库 `kkkbox/64m` 的 `main` 分支后，以 root 身份在 VPS 上执行：
 
 ```sh
-chmod +x new-install.sh
-./new-install.sh
+wget -O new-install.sh https://raw.githubusercontent.com/kkkbox/64m/main/new-install.sh && chmod +x new-install.sh && ./new-install.sh
 ```
 
-首次运行会安装依赖、下载 sing-box、创建 OpenRC 服务并显示管理菜单。
+命令会下载脚本、设置执行权限并启动安装。首次运行会安装依赖、下载 sing-box、创建 OpenRC 服务并显示管理菜单。
 
 ### 日常打开管理菜单
 
