@@ -1,69 +1,57 @@
-# kkkbox sing-box 64M VPS 极简管理脚本 (Alpine 专版)
+# kkkbox sing-box 小内存 VPS 管理脚本
 
-专为 **64MB / 128MB 超小内存 VPS** 打造的 `sing-box` 极简部署与交互式管理脚本。深度适配 **Alpine Linux (OpenRC)**，通过内核级内存回收调优与无损配置管理，实现低资源占用下的多协议稳定运行。
+支持 **Alpine Linux（OpenRC）**、**Debian / Ubuntu（systemd）** 的 sing-box 部署与管理，提供 VLESS-Reality 和 SOCKS5。首次运行脚本即注册全局命令 `sb`，以后在 SSH 终端任意目录输入 `sb` 即可添加、修改、删除节点或查看分享链接。
 
----
+## 环境要求
 
-## ✨ 核心特性
+- 使用 `root` 用户，或通过 `sudo` 运行。
+- Alpine 需要 `apk`、OpenRC；Debian / Ubuntu 需要 `apt-get`，并以 systemd 作为初始化系统。
+- 支持 `x86_64 / amd64`、`aarch64 / arm64`、`i386 / i486 / i586 / i686` 架构。
+- 需要访问软件源、GitHub API 和 GitHub Releases；生成分享链接还需访问公网 IPv4 查询服务。
+- 面向 64MB / 128MB 小内存场景，但实际内存需求取决于系统、核心版本及连接数量。Debian / Ubuntu 本身和安装依赖时通常需要更多内存或 Swap；64MB VPS 优先选择 Alpine。
 
-* **极致小内存优化**
-  * **自动防 OOM**：检测到系统无 Swap 时，自动创建并挂载 `128MB` 虚拟内存。
-  * **Go 内存墙限制**：在 OpenRC 服务中注入 `GOGC=20` 与 `GOMEMLIMIT=20MiB` 环境变量，并彻底关闭日志写入，将常驻内存压制在极低水平。
-* **双协议独立与共存**
-  * 支持 **VLESS-XTLS-Vision-Reality** 与 **SOCKS5** 协议。
-  * 支持单独安装任一协议，或一键同时部署双协议共存。
-* **无损增删改查 (CRUD)**
-  * 基于 `jq` 动态操作配置文件，支持随时**新增协议**、**单独修改现有协议参数**（如端口、SNI 域名、SOCKS5 账号密码、重置密钥）或**单独删除某一协议**，不影响其他正在运行的节点。
-* **全局快捷命令**
-  * 首次运行后自动注册系统快捷指令，任意位置输入 `sb` 即可呼出管理面板。
-* **多架构自适应**
-  * 自动识别 `x86_64 (amd64)`、`aarch64 (arm64)` 及 `386` 架构并拉取对应官方最新核心。
+## 安装与升级管理脚本
 
----
+### Debian / Ubuntu
 
-## 🖥️ 环境要求
-
-* **操作系统**：Alpine Linux（依赖 `apk` 包管理器与 `OpenRC` 初始化系统）
-* **系统权限**：`root` 用户
-* **硬件规格**：最低 64MB 内存 / 500MB 可用磁盘空间
-
----
-
-## 🚀 快速开始
-
-### 方式一：一键脚本运行（适用于已托管至 GitHub / 仓库）
+以 root 执行；普通用户先执行 `sudo -i`：
 
 ```sh
-wget -O install.sh https://raw.githubusercontent.com/kkkbox/64m/main/install.sh && chmod +x install.sh && ./install.sh
+apt-get update
+apt-get install -y ca-certificates wget
+wget -O install.sh https://raw.githubusercontent.com/kkkbox/64m/main/install.sh
+sh install.sh
 ```
 
-### 方式二：本地手动创建运行
+### Alpine
 
 ```sh
-cat << 'EOF' > install.sh
-# 将脚本完整代码粘贴至此处
-EOF
-chmod +x install.sh && ./install.sh
+apk add --no-cache ca-certificates wget
+wget -O install.sh https://raw.githubusercontent.com/kkkbox/64m/main/install.sh
+sh install.sh
 ```
 
-### 日常呼出管理面板
+上述下载地址需要先在仓库发布本次修改。若手上已有新版 `install.sh`，将文件上传至 VPS 后直接执行 `sh install.sh` 即可。
 
-首次执行脚本后，后续只需在终端输入以下命令即可随时管理节点：
+脚本启动时会检测系统、注册 `/usr/local/bin/sb` 并补齐依赖；选择添加协议后才会安装 sing-box 核心、尝试创建临时 Swap 和生成服务配置。核心使用 GitHub 的最新稳定版，仅在本地没有可执行核心时下载。
+
+更新旧版管理脚本时，重新上传或下载新版并运行 `sh install.sh`，即可更新 `sb` 并保留已有节点配置、UUID 和密钥。仅打开菜单不会重设节点，也不会更新已安装核心；选择“添加/重设 VLESS”或 `sb modify keys` 才会重置该节点的 UUID 和密钥。
+
+如果当前终端未将 `/usr/local/bin` 加入 `PATH`，使用 `/usr/local/bin/sb`，或执行：
+
+```sh
+export PATH="/usr/local/bin:$PATH"
+```
+
+## sb 快捷管理命令
 
 ```sh
 sb
 ```
 
----
-
-## 📋 功能菜单预览
-
-运行 `./install.sh` 或 `sb` 后将展示以下交互菜单：
+不带参数时打开完整主菜单：
 
 ```text
-==========================================
-    kkkbox sing-box 64M VPS 管理脚本      
-==========================================
 1. 添加/重设 VLESS-Reality 协议
 2. 添加/重设 SOCKS5 协议
 3. 一键同时安装 VLESS-Reality + SOCKS5
@@ -71,68 +59,112 @@ sb
 5. 删除指定协议节点
 6. 查看当前分享链接与节点信息
 7. 重启 sing-box 服务并查看状态
+8. 查看 sing-box 服务状态
+9. 查看 sb 管理命令帮助
 0. 退出脚本
-==========================================
 ```
 
-### 节点输出格式说明
-配置完成后，脚本会自动获取公网 IPv4 并生成以下客户端连接格式（同时自动保存至本地文件）：
-* **VLESS-Reality**：标准 `vless://` 分享链接（适配 v2rayN、Nekoray、Shadowrocket、sing-box 等客户端）。
-* **SOCKS5**：明文连接信息、标准 `socks5://` 分享链接，以及 **Telegram 一键快连链接 (`https://t.me/socks?...`)**。
+也可以直接进入指定管理功能，参数仍通过交互输入：
 
----
+| 命令 | 功能 |
+| --- | --- |
+| `sb` / `sb menu` | 打开主菜单 |
+| `sb add vless` | 添加/重设 VLESS-Reality，生成新的 UUID 和密钥 |
+| `sb add socks5` | 添加/重设 SOCKS5 |
+| `sb add all` | 依次添加两个协议 |
+| `sb modify` | 打开修改菜单 |
+| `sb modify vless` | 修改 VLESS 端口与 SNI，保留原 UUID、私钥和 Short ID |
+| `sb modify socks5` | 修改 SOCKS5 端口、用户名和密码 |
+| `sb modify keys` | 重设 VLESS-Reality，重新生成 UUID、密钥和 Short ID |
+| `sb delete` | 打开删除菜单 |
+| `sb delete vless` | 直接删除 VLESS-Reality，保留 SOCKS5 |
+| `sb delete socks5` | 直接删除 SOCKS5，保留 VLESS-Reality |
+| `sb delete all` | 直接清空所有入站并停止服务 |
+| `sb links` | 显示并重新生成分享链接 |
+| `sb start` / `sb stop` / `sb restart` | 启动 / 停止 / 重启服务 |
+| `sb status` | 查看服务状态 |
+| `sb check` | 使用 sing-box 校验当前配置 |
+| `sb help` / `sb --help` | 查看管理命令帮助 |
 
-## 📂 文件与目录结构
+### 修改端口、域名与密码
 
-| 路径 | 说明 |
-| :--- | :--- |
-| `/root/singbox/sing-box` | sing-box 核心二进制可执行文件 |
-| `/root/singbox/config.json` | sing-box 主配置文件 |
-| `/root/singbox/vless_pub.key` | Reality 协议对应的 PublicKey 缓存文件 |
-| `/root/singbox/share-link.txt` | 自动生成的节点分享链接汇总文件 |
-| `/etc/init.d/sing-box` | Alpine OpenRC 守护进程服务文件（含内存限制参数） |
-| `/usr/local/bin/sb` | 全局快捷管理命令脚本 |
-| `/swapfile` | 自动创建的 128MB 虚拟内存文件（若系统原本无 Swap） |
-
----
-
-## 🛠️ 常用维护命令
-
-除使用 `sb` 菜单外，您也可以直接使用 Alpine 原生服务命令管理进程：
+修改 VLESS-Reality：
 
 ```sh
-# 查看运行状态
-service sing-box status
+sb modify vless
+```
 
-# 重启服务
-service sing-box restart
+依次输入新端口、新 SNI 域名；回车保留当前值。SNI 填写用于 Reality 握手的 TLS 域名，例如 `www.microsoft.com`，不含 `https://`、路径或端口。
 
-# 停止服务
-service sing-box stop
+修改 SOCKS5：
 
-# 查看已保存的节点分享链接
+```sh
+sb modify socks5
+```
+
+依次输入新端口、新用户名和新密码；回车保留当前值。端口必须位于 `1–65535`，脚本会检查其他节点和本机 TCP 监听端口是否冲突。
+
+配置修改后先执行 `sing-box check`，校验通过后才保存并重启服务，随后输出新链接。更改端口、域名、账号或密码后，需要同步更新客户端；服务重启会短暂中断两个协议的已有连接。
+
+## 服务与内存设置
+
+脚本自动选择服务管理方式，并设置开机启动：
+
+| 系统 | 服务文件 | 原生服务命令 |
+| --- | --- | --- |
+| Debian / Ubuntu | `/etc/systemd/system/sing-box.service` | `systemctl status/restart/stop sing-box`，按需选择一个动作 |
+| Alpine | `/etc/init.d/sing-box` | `rc-service sing-box status/restart/stop`，按需选择一个动作 |
+
+两个服务都设置 `GOGC=20`、`GOMEMLIMIT=20MiB`，默认关闭 sing-box 日志。`GOMEMLIMIT` 是 Go 运行时的软内存目标，并非进程总内存的硬上限，也不能保证不会 OOM。
+
+系统没有 Swap 且 `/swapfile` 不存在时，添加协议会尝试创建 128MB 临时 Swap。启用失败会提示并继续安装；已有 `/swapfile` 不会被覆盖。脚本不修改 `/etc/fstab`，系统重启后不会自动重新挂载此临时 Swap。
+
+查看 Debian / Ubuntu 服务启动日志：
+
+```sh
+journalctl -u sing-box -n 50 --no-pager
+```
+
+## 配置、分享链接与备份
+
+| 路径 | 用途 |
+| --- | --- |
+| `/root/singbox/sing-box` | sing-box 核心 |
+| `/root/singbox/config.json` | 当前服务配置 |
+| `/root/singbox/config.json.bak` | 最近一次成功保存配置前的副本，每次保存覆盖 |
+| `/root/singbox/vless_pub.key` | 当前 Reality 公钥 |
+| `/root/singbox/vless_pub.key.bak` | 最近一次重设或删除 VLESS 前的公钥备份 |
+| `/root/singbox/share-link.txt` | 当前节点分享链接，包含账号凭据 |
+| `/usr/local/bin/sb` | 独立的快捷管理脚本，原上传文件移走后仍可使用 |
+| `/swapfile` | 条件满足时创建的临时 Swap |
+| 项目内 `install.sh.bak` | 本次修改前的原始安装脚本存档 |
+
+配置目录设为 `700`，配置与生成的链接文件设为 `600`。修改或删除单个协议不会删掉另一个协议的配置；清空所有协议会停止服务并删除当前链接文件。
+
+VLESS 输出 `vless://` 链接；SOCKS5 输出 `socks5://` 和 Telegram 快连链接。用户名、密码中的特殊字符会进行 URL 编码。链接按公网 IPv4 生成，使用 HTTPS 获取地址；获取失败时不会覆盖已有链接文件。
+
+```sh
 cat /root/singbox/share-link.txt
-
-# 验证配置文件语法是否正确
 /root/singbox/sing-box check -c /root/singbox/config.json
 ```
 
----
+配置校验失败会保留原配置。若配置通过校验但服务启动失败，脚本会报错，保存前配置仍在 `config.json.bak` 中；可按需恢复：
 
-## ❓ 常见问题 (FAQ)
+```sh
+cp /root/singbox/config.json.bak /root/singbox/config.json
+sb check
+sb restart
+sb links
+```
 
-**1. NAT VPS 无法创建 Swap 怎么办？**
-部分基于容器虚拟化（如 LXC / OpenVZ）的特价 64M VPS 不允许宿主机以外挂载 `/swapfile`。即使 Swap 创建跳过，脚本内置的 `GOGC=20` 与 `GOMEMLIMIT=20MiB` 依然能够限制 `sing-box` 的内存体积，保障正常启动。
+若要撤销最近一次 VLESS 重设或删除，在恢复配置的同时，还需恢复与备份配置配套的 `vless_pub.key.bak`，再重新生成链接。公钥备份与配置备份各自覆盖，未必总属于同一版本，恢复前需核对。
 
-**2. 节点配置成功但客户端无法连接？**
-* 请确认 VPS 服务商后台的**安全组/防火墙**已放行您设置的 TCP 端口。
-* 如果使用的是 **NAT 共享 IP VPS**，请确保在脚本中输入的端口号位于服务商分配给您的**可用端口映射区间**内。
+## 常见问题
 
-**3. 为什么脚本默认只获取 IPv4 地址？**
-脚本通过 `ipv4.icanhazip.com` 自动提取公网 IPv4。若您的机器为 **纯 IPv6 VPS**，只需将生成链接中的 IP 地址手动替换为您的 `[IPv6地址]`，并在 `/root/singbox/config.json` 中将入站监听 `"listen": "0.0.0.0"` 改为 `"::"` 后重启服务即可。
+- **节点无法连接**：检查 VPS 防火墙、安全组是否开放所选 TCP 端口；NAT VPS 需使用已分配且正确映射的公网端口。脚本不自动修改防火墙。
+- **纯 IPv6 VPS**：当前自动安装与链接输出按 IPv4 监听地址 `0.0.0.0` 设计；纯 IPv6 环境需自行调整监听和链接地址。
+- **没有 systemd 的 Debian 容器**：当前 Debian / Ubuntu 服务部署需要运行中的 systemd；精简容器和 SysVinit 不在本脚本支持范围内。
+- **提示端口占用**：更换端口，或先处理占用端口的程序。修改节点时继续使用该节点原端口是允许的。
+- **小内存 VPS 安装失败**：先确认软件源可达、磁盘空间足够以及 Swap 是否可用。临时 Swap 创建发生在安装依赖之后，无法解决包管理器阶段本身的内存不足。
 
----
-
-## ⚠️ 免责声明
-
-本项目仅供网络技术学习、Linux 内存调优研究与个人合法跨境通信测试使用。请勿将其用于任何违反服务器所在地及使用者所在地法律法规的用途，一切因违规使用造成的后果由使用者自行承担。
+本项目用于网络技术学习与个人合法通信测试，请遵守服务器所在地和使用所在地的相关规定。
